@@ -397,8 +397,12 @@
                 </table>
 
                 <h4>Vulnerable Code</h4>
-                <p><a href="https://github.com/Amit22-yadav/chain-abstraction-audit-report/blob/main/ECDSA_NONCE_VULNERABILITY_EXPLAINED.md"
-                        target="_blank">Detailed Explanation of ECDSA Nonce Vulnerability</a></p>
+                <p>
+                    <a href="https://github.com/Amit22-yadav/chain-abstraction-audit-report/blob/main/ECDSA_NONCE_VULNERABILITY_EXPLAINED.md"
+                        target="_blank">Detailed Explanation of ECDSA Nonce Vulnerability</a><br>
+                    <a href="https://github.com/Amit22-yadav/chain-abstraction-audit-report/blob/main/NONCE_ATTACK_TEST_EXPLANATION.md"
+                        target="_blank">Explanation of the Nonce Attack Test</a>
+                </p>
                 <pre><code>// src/signing/mod.rs:260-263
 // 2) Fixed nonce k = 0x42...42
 let k_bytes = [0x42u8; 32];
