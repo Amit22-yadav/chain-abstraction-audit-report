@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Audit Report - Qubetics Chain Abstraction</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            color: #34495e;
+            margin-top: 35px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+        }
+
+        h3 {
+            color: #2c3e50;
+            margin-top: 25px;
+        }
+
+        h4 {
+            color: #555;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #444;
+        }
+
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        /* Severity Sections */
+        .finding {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin-bottom: 25px;
+            overflow: hidden;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .finding-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .finding-title {
+            font-size: 1.15em;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .finding-body {
+            padding: 20px;
+        }
+
+        /* Severity Colors */
+        .severity-Critical {
+            border-left: 6px solid #d32f2f;
+        }
+
+        .severity-Critical .finding-header {
+            background-color: #ffebee;
+            color: #b71c1c;
+        }
+
+        .severity-High {
+            border-left: 6px solid #f57c00;
+        }
+
+        .severity-High .finding-header {
+            background-color: #fff3e0;
+            color: #e65100;
+        }
+
+        .severity-Medium {
+            border-left: 6px solid #fbc02d;
+        }
+
+        .severity-Medium .finding-header {
+            background-color: #fffde7;
+            color: #f57f17;
+        }
+
+        .severity-Low {
+            border-left: 6px solid #388e3c;
+        }
+
+        .severity-Low .finding-header {
+            background-color: #e8f5e9;
+            color: #1b5e20;
+        }
+
+        .severity-Info {
+            border-left: 6px solid #1976d2;
+        }
+
+        .severity-Info .finding-header {
+            background-color: #e3f2fd;
+            color: #0d47a1;
+        }
+
+        /* Badges */
+        .badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: bold;
+            background: white;
+            border: 1px solid currentColor;
+        }
+
+        /* Code Blocks */
+        pre {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            border: 1px solid #e9ecef;
+            margin: 15px 0;
+        }
+
+        code {
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+            font-size: 0.9em;
+            color: #d63384;
+        }
+
+        pre code {
+            color: #333;
+        }
+
+        /* Meta Info */
+        .meta-info {
+            background-color: #eef2f5;
+            padding: 15px 20px;
+            border-radius: 6px;
+            margin-bottom: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .meta-item strong {
+            display: block;
+            color: #666;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .meta-item span {
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* Lists */
+        ul {
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 5px;
+        }
+
+        /* Table of Contents */
+        .toc {
+            background: #fafafa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 40px;
+            border: 1px solid #eee;
+        }
+
+        .toc h3 {
+            margin-top: 0;
+        }
+
+        .toc ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .toc li {
+            margin-bottom: 8px;
+        }
+
+        .toc a {
+            text-decoration: none;
+            color: #0366d6;
+        }
+
+        .toc a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>Security Audit Report: Qubetics Chain Abstraction</h1>
+
+        <div class="meta-info">
+            <div class="meta-item"><strong>Date</strong> <span>December 16, 2025</span></div>
+            <div class="meta-item"><strong>Codebase</strong> <span>Rust-based MPC Node</span></div>
+        </div>
+
+        <h2>Executive Summary</h2>
+        <p>This is a comprehensive security audit of the Qubetics Chain Abstraction codebase. The system uses
+            Distributed Key Generation (DKG), threshold signatures, and manages liquidity pools for solvers. All the
+            vulnerabilities have been thoroughly re-examined to confirm:
+        <ol>
+            <li>The vulnerable code still exists</li>
+            <li>The code path is actively used (not dead code)</li>
+            <li>The actual security impact</li>
+        </ol>
+        </p>
+
+        <h3>Verified Findings Summary</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Severity</th>
+                    <th>Count</th>
+                    <th>Actively Used</th>
+                    <th>Impact</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>CRITICAL</strong></td>
+                    <td>4</td>
+                    <td>4 YES</td>
+                    <td>Complete system compromise possible</td>
+                </tr>
+                <tr>
+                    <td><strong>HIGH</strong></td>
+                    <td>6</td>
+                    <td>6 YES</td>
+                    <td>Significant security/availability risk</td>
+                </tr>
+                <tr>
+                    <td><strong>MEDIUM</strong></td>
+                    <td>4</td>
+                    <td>2 YES, 2 NO</td>
+                    <td>Moderate risk or future risk</td>
+                </tr>
+                <tr>
+                    <td><strong>LOW</strong></td>
+                    <td>4</td>
+                    <td>MIXED</td>
+                    <td>Minor issues</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="toc">
+            <h3>Table of Contents</h3>
+            <ul>
+                <li>1. <a href="#codebase">Codebase Overview</a></li>
+                <li>2. <a href="#critical">Critical Vulnerabilities</a></li>
+                <li>3. <a href="#high">High Severity Vulnerabilities</a></li>
+                <li>4. <a href="#medium">Medium Severity Vulnerabilities</a></li>
+                <li>5. <a href="#low">Low Severity & Informational</a></li>
+                <li>6. <a href="#verification">Verification Methodology</a></li>
+                <li>7. <a href="#recommendations">Recommendations</a></li>
+            </ul>
+        </div>
+
+        <h2 id="codebase">1. Codebase Overview</h2>
+        <h3>1.1 Project Purpose</h3>
+        <p>The Qubetics Chain Abstraction project implements a <strong>Multi-Party Computation (MPC) network</strong>
+            for cross-chain cryptocurrency transactions. Key features include:</p>
+        <ul>
+            <li>Distributed Key Generation (DKG) for shared key management</li>
+            <li>Threshold ECDSA signing across multiple nodes</li>
+            <li>Cross-chain bridging between Bitcoin and EVM chains</li>
+            <li>Liquidity pool management for solvers</li>
+            <li>VRF-based node selection for consensus</li>
+        </ul>
+
+        <h3>1.2 Architecture Components</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Component</th>
+                    <th>Location</th>
+                    <th>Purpose</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>DKG Node</td>
+                    <td>`src/dkg/`</td>
+                    <td>Distributed key generation using Feldman VSS</td>
+                </tr>
+                <tr>
+                    <td>Signing Node</td>
+                    <td>`src/signing/`</td>
+                    <td>Threshold ECDSA signature generation</td>
+                </tr>
+                <tr>
+                    <td>Chain Handlers</td>
+                    <td>`src/chain_abstraction/`</td>
+                    <td>Bitcoin and Ethereum transaction handling</td>
+                </tr>
+                <tr>
+                    <td>Sequencer</td>
+                    <td>`src/network/sequencer.rs`</td>
+                    <td>Transaction ordering and consensus</td>
+                </tr>
+                <tr>
+                    <td>RPC Server</td>
+                    <td>`src/rpc_server/`</td>
+                    <td>External API for user operations</td>
+                </tr>
+                <tr>
+                    <td>Network Layer</td>
+                    <td>`src/network/`</td>
+                    <td>P2P communication via libp2p</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>1.3 Transaction Flow</h3>
+        <pre><code>User Registration → Deposit Intent → DKG Signing → Cross-Chain Bridge → Reward Distribution</code></pre>
+
+        <h2 id="critical">2. Critical Vulnerabilities</h2>
+
+        <!-- CRITICAL-01 -->
+        <div class="finding severity-Critical">
+            <div class="finding-header">
+                <span class="finding-title">CRITICAL-01: Hardcoded ECDSA Nonce (Private Key Compromise)</span>
+                <span class="badge">CVSS: 10.0</span>
+            </div>
+            <div class="finding-body">
+                <table>
+                    <tr>
+                        <td><strong>Location</strong></td>
+                        <td>src/signing/mod.rs:260-263</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Status</strong></td>
+                        <td>✅ VERIFIED - ACTIVELY USED</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Impact</strong></td>
+                        <td>Complete private key extraction from 2 signatures</td>
+                    </tr>
+                </table>
+
+                <h4>Vulnerable Code</h4>
+                <pre><code>// src/signing/mod.rs:260-263
+// 2) Fixed nonce k = 0x42...42
+let k_bytes = [0x42u8; 32];
+let sec_nonce =
+    SecretKey::from_slice(&k_bytes).map_err(|e| anyhow!("invalid nonce slice: {}", e))?;</code></pre>
+
+                <h4>Technical Explanation</h4>
+                <p>ECDSA signatures use the formula: <code>s = k⁻¹(z + r·x) mod n</code></p>
+                <p><strong>Attack:</strong> When the same nonce <code>k</code> is used for two different messages (z₁,
+                    z₂):</p>
+                <pre><code>s₁ - s₂ = k⁻¹(z₁ - z₂) mod n
+k = (z₁ - z₂) / (s₁ - s₂) mod n
+x = (s·k - z) / r mod n  ← PRIVATE KEY RECOVERED</code></pre>
+
+                <h4>Proof of Active Usage</h4>
+                <pre><code>sign_bitcoin_transaction() [bitcoin.rs:96]
+    └─> create_ecdsa_signature_with_signing_key() [mod.rs:250]
+            └─> k_bytes = [0x42u8; 32]  ← HARDCODED NONCE</code></pre>
+                <p><strong>Every single Bitcoin and Ethereum transaction signed by this system uses the same
+                        nonce.</strong></p>
+            </div>
+        </div>
+
+        <!-- CRITICAL-02 -->
+        <div class="finding severity-Critical">
+            <div class="finding-header">
+                <span class="finding-title">CRITICAL-02: Transaction ID Divergence (Consensus Failure)</span>
+                <span class="badge">CVSS: 9.1</span>
+            </div>
+            <div class="finding-body">
+                <table>
+                    <tr>
+                        <td><strong>Location</strong></td>
+                        <td>src/network/sequencer.rs:291-298</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Status</strong></td>
+                        <td>✅ VERIFIED - ACTIVELY USED</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Impact</strong></td>
+                        <td>Split-brain consensus, double execution</td>
+                    </tr>
+                </table>
+
+                <h4>Vulnerable Code</h4>
+                <pre><code>// src/network/sequencer.rs:291-298
+let final_transaction_id = if pending.contains_key(&transaction_id) {
+    // Duplicate detected: append sequence to make it unique
+    let unique_id = format!("{}:seq{}", transaction_id, sequence);
+    warn!("Duplicate transaction_id detected: {}. Using unique ID: {}", transaction_id, unique_id);
+    unique_id
+} else {
+    transaction_id.clone()
+};</code></pre>
+
+                <h4>Attack Scenario</h4>
+                <p>Nodes process transactions in different orders. The local <code>sequence</code> counter is not
+                    synchronized.</p>
+                <pre><code>Node A: Receives T1 first → ID: T1:seq1
+Node B: Receives T1 second → ID: T1:seq2
+Result: Nodes propose different IDs for same transaction → Consensus Split</code></pre>
+            </div>
+        </div>
+
+        <!-- CRITICAL-03 -->
+        <div class="finding severity-Critical">
+            <div class="finding-header">
+                <span class="finding-title">CRITICAL-03: Unanimous Consensus Requirement (Liveness Failure)</span>
+                <span class="badge">CVSS: 8.6</span>
+            </div>
+            <div class="finding-body">
+                <table>
+                    <tr>
+                        <td><strong>Location</strong></td>
+                        <td>src/network/sequencer.rs:537, 748</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Status</strong></td>
+                        <td>✅ VERIFIED - ACTIVELY USED</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Impact</strong></td>
+                        <td>Single node failure halts entire network</td>
+                    </tr>
+                </table>
+
+                <h4>Vulnerable Code</h4>
+                <pre><code>if confirmed_count >= sync_state.total_nodes {
+    // Only proceed if 100% of nodes confirm
+}</code></pre>
+                <p>The system requires <strong>100% of nodes</strong> to confirm before proceeding. Standard BFT systems
+                    use 2/3 thresholds. If a single node crashes, the network halts permanently.</p>
+            </div>
+        </div>
+
+        <!-- CRITICAL-04 -->
+        <div class="finding severity-Critical">
+            <div class="finding-header">
+                <span class="finding-title">CRITICAL-04: Default API Key in Production</span>
+                <span class="badge">CVSS: 9.8</span>
+            </div>
+            <div class="finding-body">
+                <table>
+                    <tr>
+                        <td><strong>Location</strong></td>
+                        <td>src/rpc_server/server.rs:330-331</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Status</strong></td>
+                        <td>✅ VERIFIED - ACTIVELY USED</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Impact</strong></td>
+                        <td>Unauthorized access to all protected endpoints</td>
+                    </tr>
+                </table>
+
+                <h4>Vulnerable Code</h4>
+                <pre><code>let expected_key =
+    std::env::var("RPC_API_KEY").unwrap_or_else(|_| "default_dev_key".to_string());</code></pre>
+                <p>If <code>RPC_API_KEY</code> is not set, the system defaults to "default_dev_key".</p>
+                <p><strong>Affected Endpoints:</strong> <code>/register_user</code>, <code>/user_mpc_deposit</code>,
+                    <code>/claim_reward</code>, <code>/withdraw_liquidity</code>
+                </p>
+            </div>
+        </div>
+
+        <h2 id="high">3. High Severity Vulnerabilities</h2>
+
+        <!-- HIGH-01 -->
+        <div class="finding severity-High">
+            <div class="finding-header">
+                <span class="finding-title">HIGH-01: Data Directory Deleted on Every Startup</span>
+                <span class="badge">Verified</span>
+            </div>
+            <div class="finding-body">
+                <p><strong>Location:</strong> <code>src/main.rs:361-370</code></p>
+                <pre><code>match fs::remove_dir_all("./data") { ... }</code></pre>
+                <p><strong>Impact:</strong> Loss of critical DKG state, user data, and transaction history on every
+                    restart.</p>
+            </div>
+        </div>
+
+        <!-- HIGH-02 -->
+        <div class="finding severity-High">
+            <div class="finding-header">
+                <span class="finding-title">HIGH-02: CORS Allows Any Origin</span>
+                <span class="badge">Verified</span>
+            </div>
+            <div class="finding-body">
+                <p><strong>Location:</strong> <code>src/rpc_server/server.rs:189-190</code></p>
+                <pre><code>let cors = warp::cors().allow_any_origin()</code></pre>
+                <p><strong>Impact:</strong> CSRF attacks, unauthorized browser-based access.</p>
+            </div>
+        </div>
+
+        <!-- HIGH-03 -->
+        <div class="finding severity-High">
+            <div class="finding-header">
+                <span class="finding-title">HIGH-03: Hardcoded 5-Second Sleep (Race Condition Workaround)</span>
+                <span class="badge">Verified</span>
+            </div>
+            <div class="finding-body">
+                <p><strong>Location:</strong> <code>src/chain_abstraction/executor.rs:44</code></p>
+                <pre><code>tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;</code></pre>
+                <p><strong>Impact:</strong> Slows down every transaction by 5 seconds; indicates unresolved
+                    synchronization/race condition.</p>
+            </div>
+        </div>
+
+        <!-- HIGH-04 -->
+        <div class="finding severity-High">
+            <div class="finding-header">
+                <span class="finding-title">HIGH-04: API Key Logged in Plaintext</span>
+                <span class="badge">Verified</span>
+            </div>
+            <div class="finding-body">
+                <p><strong>Location:</strong> <code>src/rpc_server/server.rs:332-335</code></p>
+                <pre><code>info!("🔐 Auth Check: Received '{:?}', Expected '{}'", api_key, expected_key);</code></pre>
+                <p><strong>Impact:</strong> Credential exposure in logs.</p>
+            </div>
+        </div>
+
+        <!-- HIGH-05 -->
+        <div class="finding severity-High">
+            <div class="finding-header">
+                <span class="finding-title">HIGH-05: Placeholder Contract Address Silently Skips Operations</span>
+                <span class="badge">Verified</span>
+            </div>
+            <div class="finding-body">
+                <p><strong>Impact:</strong> Silent failures, inconsistent state.</p>
+                <h4>Affected Locations</h4>
+                <ul>
+                    <li><code>src/signing/rewards.rs:147, 153</code> - Solver liquidity updates</li>
+                    <li><code>src/network/rpc/channel_handler.rs:89, 95</code> - Solver ID lookups</li>
+                    <li><code>src/network/rpc/channel_handler.rs:498, 499</code> - Contract operations</li>
+                    <li>Multiple other locations in channel handler.</li>
+                </ul>
+                <pre><code>if contract_address == "0x0000000000000000000000000000000000000000" {
+    return Ok(()); // Silent return
+}</code></pre>
+            </div>
+        </div>
+
+        <!-- HIGH-06 -->
+        <div class="finding severity-High">
+            <div class="finding-header">
+                <span class="finding-title">HIGH-06: Excessive Use of .unwrap() (DoS Risk)</span>
+                <span class="badge">Verified</span>
+            </div>
+            <div class="finding-body">
+                <p><strong>Location:</strong> Throughout codebase (389 occurrences)</p>
+                <p><strong>Impact:</strong> Node crashes on unexpected input (panic in async context).</p>
+            </div>
+        </div>
+
+        <h2 id="medium">4. Medium Severity Vulnerabilities</h2>
+
+        <!-- MEDIUM-01 -->
+        <div class="finding severity-Medium">
+            <div class="finding-header">
+                <span class="finding-title">MEDIUM-01: Bitcoin Signature Verification Not Implemented</span>
+                <span class="badge">Not Called, Should be Removed</span>
+            </div>
+            <div class="finding-body">
+                <p><strong>Location:</strong> <code>src/chain_abstraction/handlers/bitcoin.rs:335-336</code></p>
+                <pre><code>tracing::warn!("Bitcoin signature verification not fully implemented - returning true");</code></pre>
+            </div>
+        </div>
+
+        <!-- MEDIUM-02 -->
+        <div class="finding severity-Medium">
+            <div class="finding-header">
+                <span class="finding-title">MEDIUM-02: Ethereum Signature Verification Not Implemented</span>
+                <span class="badge">Not Called, Should be Removed</span>
+            </div>
+            <div class="finding-body">
+                <p><strong>Location:</strong> <code>src/chain_abstraction/handlers/ethereum.rs:154-158</code></p>
+                <pre><code>tracing::info!("Ethereum signature verification - basic validation passed");</code></pre>
+            </div>
+        </div>
+
+        <!-- MEDIUM-03 -->
+        <div class="finding severity-Medium">
+            <div class="finding-header">
+                <span class="finding-title">MEDIUM-03: Empty ADKGMessage Enum</span>
+                <span class="badge">Legacy</span>
+            </div>
+            <div class="finding-body">
+                <p><strong>Location:</strong> <code>src/types/dkg.rs:7</code></p>
+                <p>Empty enum suggests unused or legacy code compared to actual DKG implementation.</p>
+            </div>
+        </div>
+
+        <!-- MEDIUM-04 -->
+        <div class="finding severity-Medium">
+            <div class="finding-header">
+                <span class="finding-title">MEDIUM-04: No Rate Limiting on RPC Endpoints</span>
+                <span class="badge">Verified</span>
+            </div>
+            <div class="finding-body">
+                <p>No rate limiting middleware is applied, allowing brute force and spam attacks.</p>
+            </div>
+        </div>
+
+        <h2 id="low">5. Low Severity & Informational</h2>
+
+        <div class="finding severity-Low">
+            <div class="finding-header"><span class="finding-title">LOW-01: Debug Logging of Sensitive Data</span></div>
+            <div class="finding-body">
+                <p>Signing keys logged at <code>src/signing/chains/bitcoin.rs:319-322</code>.</p>
+            </div>
+        </div>
+
+        <div class="finding severity-Low">
+            <div class="finding-header"><span class="finding-title">LOW-02: Hardcoded Default Ports</span></div>
+            <div class="finding-body">
+                <p><code>src/main.rs:56-57</code> uses <code>.unwrap_or(8081)</code>.</p>
+            </div>
+        </div>
+
+        <div class="finding severity-Low">
+            <div class="finding-header"><span class="finding-title">LOW-03: Large Request Body Limit</span></div>
+            <div class="finding-body">
+                <p>256KB request limit may be excessive for some endpoints.</p>
+            </div>
+        </div>
+
+        <div class="finding severity-Info">
+            <div class="finding-header"><span class="finding-title">INFO-01: TODO Comments</span></div>
+            <div class="finding-body">
+                <p>Indicating incomplete features, eg. network type determination in ethereum.rs.</p>
+            </div>
+        </div>
+
+        <h2 id="verification">6. Verification Methodology</h2>
+        <p>Each vulnerability was verified using the following process:</p>
+        <ol>
+            <li><strong>Code Existence:</strong> Confirm the vulnerable code pattern exists using file reads and grep.
+            </li>
+            <li><strong>Call Path Analysis:</strong> Trace from entry points to vulnerable code.</li>
+            <li><strong>Active Usage Confirmation:</strong> Determine if actively used, dead code, or partially used.
+            </li>
+            <li><strong>Impact Assessment:</strong> Evaluate actual security impact (Exploitability, Scope,
+                Availability).</li>
+        </ol>
+
+        <h2 id="recommendations">7. Recommendations</h2>
+        <h3>Immediate Actions (CRITICAL) - P0</h3>
+        <ul>
+            <li><strong>Hardcoded Nonce:</strong> Replace with RFC 6979 deterministic nonce generation.</li>
+            <li><strong>Default API Key:</strong> Remove fallback, require explicit configuration.</li>
+            <li><strong>Transaction ID Divergence:</strong> Use content-based hashing without local sequence.</li>
+            <li><strong>Unanimous Consensus:</strong> Change to 2/3+1 threshold for completion.</li>
+        </ul>
+
+        <h3>Short-term Actions (HIGH) - P1</h3>
+        <ul>
+            <li><strong>Data Deletion:</strong> Add production mode flag, remove auto-deletion.</li>
+            <li><strong>CORS:</strong> Configure specific allowed origins.</li>
+            <li><strong>Sleep Workaround:</strong> Implement proper event-driven synchronization.</li>
+            <li><strong>API Key Logging:</strong> Remove credential logging entirely.</li>
+            <li><strong>Placeholder Address:</strong> Fail explicitly when not configured.</li>
+            <li><strong>Unwrap Usage:</strong> Replace with proper error handling.</li>
+        </ul>
+
+        <h2>8. Conclusion</h2>
+        <p>This codebase is <strong>NOT suitable for production use</strong>. The hardcoded ECDSA nonce alone allows
+            complete fund theft after 2 transactions.</p>
+        <p><strong>Recommended Actions:</strong></p>
+        <ol>
+            <li>Immediately halt any production/testnet deployment.</li>
+            <li>Prioritize fixing CRITICAL-01 (nonce).</li>
+            <li>Redesign consensus.</li>
+            <li>Perform formal security audit.</li>
+        </ol>
+
+    </div>
+
+</body>
+
+</html>
